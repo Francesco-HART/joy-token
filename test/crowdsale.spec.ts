@@ -16,6 +16,7 @@ describe("Joy", function () {
   async function deployOneYearLockFixture() {
     // Contracts are deployed using the first signer/account by default
     const [owner, otherAccount] = await ethers.getSigners();
+    const zeroAddress = '0x0000000000000000000000000000000000000000';
 
     const Joy = await ethers.getContractFactory("Joy");
     const joy = await Joy.deploy();
@@ -33,7 +34,7 @@ describe("Joy", function () {
     await joy.transfer(await joyCrowdSale.getAddress(), 1000000000/2);
     await joy.transfer(owner.getAddress(), 1000000000/2);
 
-    return { joyCrowdSale, joy, owner, otherAccount };
+    return { joyCrowdSale, joy, owner, otherAccount, zeroAddress };
   }
 
   describe.only("Crowdsale Joy buyTokens", function () {
@@ -79,9 +80,9 @@ describe("Joy", function () {
       })).to.be.revertedWith("Crowdsale: cap exceeded");
     });
 
-    it("Should not buy tokens to 0 adress", async function () {
+    it("Should not buy tokens to 0 address", async function () {
       // given
-      const { joy, joyCrowdSale, owner, otherAccount } = await loadFixture(
+      const { joy, joyCrowdSale, owner, otherAccount,zeroAddress } = await loadFixture(
         deployOneYearLockFixture
       );
 
@@ -90,12 +91,9 @@ describe("Joy", function () {
         owner
       );
       const connectingJoyContract = await connectToJoy(joy, owner);
-      await connectingCrowdsaleContract.buyTokens(otherAccount, {
-        value: 10,
-      });
 
       // then
-      await expect(connectingCrowdsaleContract.buyTokens(owner.getAddress(), {
+      await expect(connectingCrowdsaleContract.buyTokens(zeroAddress, {
         value: 1,
       })).to.be.revertedWith("Crowdsale: beneficiary is the zero address");
     });
