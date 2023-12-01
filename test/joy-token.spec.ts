@@ -1,8 +1,4 @@
-import {
-  time,
-  loadFixture,
-} from "@nomicfoundation/hardhat-toolbox/network-helpers";
-import { anyValue } from "@nomicfoundation/hardhat-chai-matchers/withArgs";
+import { loadFixture } from "@nomicfoundation/hardhat-toolbox/network-helpers";
 import { expect } from "chai";
 import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
@@ -10,32 +6,28 @@ import { ContractTransactionResponse } from "ethers";
 import { Crowdsale, Joy } from "../typechain-types";
 
 describe("Joy", function () {
-  // We define a fixture to reuse the same setup in every test.
-  // We use loadFixture to run this setup once, snapshot that state,
-  // and reset Hardhat Network to that snapshot in every test.
   async function deployOneYearLockFixture() {
-    // Contracts are deployed using the first signer/account by default
     const [owner, otherAccount] = await ethers.getSigners();
 
     const Joy = await ethers.getContractFactory("Joy");
     const joy = await Joy.deploy();
 
-    const JoyCrowdsale = await ethers.getContractFactory("Crowdsale");
+    const CrowdSale = await ethers.getContractFactory("Crowdsale");
 
-    const joyCrowdSale = await JoyCrowdsale.deploy(
-      1,
-      owner.address,
-      joy,
-      1000000000000000000000000000,
-      1000000000000000000000000000
+    const crowdsale = await CrowdSale.deploy(
+        1,
+        owner.address,
+        joy.getAddress(),
+        1000000000,
+        1000000000000
     );
 
-    return { joyCrowdSale, joy, owner, otherAccount };
+    return { joyCrowdSale: crowdsale, joy, owner, otherAccount };
   }
 
   describe("Deployment", function () {
     it("Should have a name, symbol, and decimals", async function () {
-      const { joy, owner } = await loadFixture(deployOneYearLockFixture);
+      const { joy } = await loadFixture(deployOneYearLockFixture);
 
       const name = await joy.name();
       const symbol = await joy.symbol();
@@ -43,7 +35,7 @@ describe("Joy", function () {
 
       expect(name).to.not.be.empty;
       expect(symbol).to.not.be.empty;
-      expect(decimals).to.be.equal(18); // Adjust if your token has a different number of decimals
+      expect(decimals).to.equal(18);
     });
 
     it("Should mint and transfer tokens correctly", async function () {
@@ -55,13 +47,19 @@ describe("Joy", function () {
       await joy.connect(owner).mint(owner.address, transferAmount);
       const newBalance = await joy.balanceOf(owner.address);
 
-      expect(newBalance).to.be.equal(initialBalance + transferAmount);
+      // Convert initialBalance to BigInt using BigInt()
+      const initialBalanceBigInt = BigInt(initialBalance);
+
+      // Perform the addition using BigInt
+      const expectedBalance = initialBalanceBigInt + BigInt(transferAmount.toString());
+
+      // Use toString() to compare the values
+      expect(newBalance.toString()).to.equal(expectedBalance.toString());
+
     });
 
     it("Should transfer tokens between accounts", async function () {
-      const { joy, owner, otherAccount } = await loadFixture(
-        deployOneYearLockFixture
-      );
+      const { joy, owner, otherAccount } = await loadFixture(deployOneYearLockFixture);
 
       const senderBalanceBefore = await joy.balanceOf(owner.address);
       const recipientBalanceBefore = await joy.balanceOf(otherAccount.address);
@@ -72,23 +70,24 @@ describe("Joy", function () {
       const senderBalanceAfter = await joy.balanceOf(owner.address);
       const recipientBalanceAfter = await joy.balanceOf(otherAccount.address);
 
-      expect(senderBalanceAfter).to.be.equal(
-        senderBalanceBefore - transferAmount
-      );
-      expect(recipientBalanceAfter).to.be.equal(
-        recipientBalanceBefore + transferAmount
-      );
+      // Convert balances to BigInt for comparison
+      const senderBalanceBeforeBigInt = BigInt(senderBalanceBefore.toString());
+      const recipientBalanceBeforeBigInt = BigInt(recipientBalanceBefore.toString());
+      const transferAmountBigInt = BigInt(transferAmount.toString());
+
+      expect(senderBalanceAfter.toString()).to.equal((senderBalanceBeforeBigInt - transferAmountBigInt).toString());
+      expect(recipientBalanceAfter.toString()).to.equal((recipientBalanceBeforeBigInt + transferAmountBigInt).toString());
     });
   });
 
   const connectToCrowdsale = async (
-    crowdsale: CrowdsaleContract,
-    owner: SignerWithAddress
+      crowdsale: CrowdsaleContract,
+      owner: SignerWithAddress
   ): Promise<Crowdsale> => crowdsale.connect(owner);
 
   const connectToJoy = async (
-    joy: JoysaleContract,
-    owner: SignerWithAddress
+      joy: JoysaleContract,
+      owner: SignerWithAddress
   ): Promise<Joy> => joy.connect(owner);
 
   type CrowdsaleContract = Crowdsale & {
