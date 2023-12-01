@@ -25,10 +25,13 @@ describe("Joy", function () {
     const joyCrowdSale = await JoyCrowdsale.deploy(
       1,
       owner.address,
-      joy.getAddress(),
+      await joy.getAddress(),
       1000000000,
       10000000000000
     );
+
+    await joy.transfer(await joyCrowdSale.getAddress(), 1000000000/2);
+    await joy.transfer(owner.getAddress(), 1000000000/2);
 
     return { joyCrowdSale, joy, owner, otherAccount };
   }
@@ -45,17 +48,17 @@ describe("Joy", function () {
         owner
       );
       const connectingJoyContract = await connectToJoy(joy, owner);
-      connectingCrowdsaleContract.buyTokens(otherAccount, {
+      await connectingCrowdsaleContract.buyTokens(otherAccount.address, {
         value: 10,
       });
 
       // then
-      expect(await connectingJoyContract.balanceOf(otherAccount)).to.be.equal(
-        0
+      expect(await connectingJoyContract.balanceOf(otherAccount.address)).to.be.equal(
+        10
       );
     });
 
-    it("Should buy tokens correctly", async function () {
+    it("Should not buy tokens if go over cap", async function () {
       // given
       const { joy, joyCrowdSale, owner, otherAccount } = await loadFixture(
         deployOneYearLockFixture
@@ -66,15 +69,37 @@ describe("Joy", function () {
         owner
       );
       const connectingJoyContract = await connectToJoy(joy, owner);
-      connectingCrowdsaleContract.buyTokens(otherAccount, {
+      await connectingCrowdsaleContract.buyTokens(otherAccount, {
         value: 10,
       });
 
       // then
-      expect(await connectingJoyContract.balanceOf(otherAccount)).to.be.equal(
-        0
-      );
+      await expect(connectingCrowdsaleContract.buyTokens(otherAccount.address, {
+        value: 999999999999999,
+      })).to.be.revertedWith("Crowdsale: cap exceeded");
     });
+
+    it("Should not buy tokens to 0 adress", async function () {
+      // given
+      const { joy, joyCrowdSale, owner, otherAccount } = await loadFixture(
+        deployOneYearLockFixture
+      );
+
+      const connectingCrowdsaleContract = await connectToCrowdsale(
+        joyCrowdSale,
+        owner
+      );
+      const connectingJoyContract = await connectToJoy(joy, owner);
+      await connectingCrowdsaleContract.buyTokens(otherAccount, {
+        value: 10,
+      });
+
+      // then
+      await expect(connectingCrowdsaleContract.buyTokens(owner.getAddress(), {
+        value: 1,
+      })).to.be.revertedWith("Crowdsale: beneficiary is the zero address");
+    });
+
   });
 
   const connectToCrowdsale = async (
