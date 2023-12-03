@@ -26,8 +26,8 @@ describe("Joy", function () {
       1,
       owner.address,
       joy,
-      1000000000000000000000000000,
-      1000000000000000000000000000
+      100000000000000,
+      100000000000000
     );
 
     return { joyCrowdSale, joy, owner, otherAccount };
@@ -80,11 +80,6 @@ describe("Joy", function () {
       );
     });
   });
-
-  const connectToCrowdsale = async (
-    crowdsale: CrowdsaleContract,
-    owner: SignerWithAddress
-  ): Promise<Crowdsale> => crowdsale.connect(owner);
 
   const connectToJoy = async (
     joy: JoysaleContract,

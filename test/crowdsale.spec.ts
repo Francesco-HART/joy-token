@@ -8,15 +8,18 @@ import { ethers } from "hardhat";
 import { SignerWithAddress } from "@nomicfoundation/hardhat-ethers/signers";
 import { ContractTransactionResponse } from "ethers";
 import { Crowdsale, Joy } from "../typechain-types";
+import dotenv from "dotenv";
 
-describe("Joy", function () {
+describe("Crowdsale", function () {
+  dotenv.config();
+
   // We define a fixture to reuse the same setup in every test.
   // We use loadFixture to run this setup once, snapshot that state,
   // and reset Hardhat Network to that snapshot in every test.
   async function deployOneYearLockFixture() {
     // Contracts are deployed using the first signer/account by default
     const [owner, otherAccount] = await ethers.getSigners();
-    const zeroAddress = '0x0000000000000000000000000000000000000000';
+    const zeroAddress = "0x0000000000000000000000000000000000000000";
 
     const Joy = await ethers.getContractFactory("Joy");
     const joy = await Joy.deploy();
@@ -31,13 +34,13 @@ describe("Joy", function () {
       10000000000000
     );
 
-    await joy.transfer(await joyCrowdSale.getAddress(), 1000000000/2);
-    await joy.transfer(owner.getAddress(), 1000000000/2);
+    await joy.transfer(await joyCrowdSale.getAddress(), 1000000000 / 2);
+    await joy.transfer(owner.getAddress(), 1000000000 / 2);
 
     return { joyCrowdSale, joy, owner, otherAccount, zeroAddress };
   }
 
-  describe.only("Crowdsale Joy buyTokens", function () {
+  describe("Crowdsale Joy buyTokens", function () {
     it("Should buy tokens correctly", async function () {
       // given
       const { joy, joyCrowdSale, owner, otherAccount } = await loadFixture(
@@ -54,9 +57,9 @@ describe("Joy", function () {
       });
 
       // then
-      expect(await connectingJoyContract.balanceOf(otherAccount.address)).to.be.equal(
-        10
-      );
+      expect(
+        await connectingJoyContract.balanceOf(otherAccount.address)
+      ).to.be.equal(10);
     });
 
     it("Should not buy tokens if go over cap", async function () {
@@ -75,16 +78,17 @@ describe("Joy", function () {
       });
 
       // then
-      await expect(connectingCrowdsaleContract.buyTokens(otherAccount.address, {
-        value: 999999999999999,
-      })).to.be.revertedWith("Crowdsale: cap exceeded");
+      await expect(
+        connectingCrowdsaleContract.buyTokens(otherAccount.address, {
+          value: 999999999999999,
+        })
+      ).to.be.revertedWith("Crowdsale: cap exceeded");
     });
 
     it("Should not buy tokens to 0 address", async function () {
       // given
-      const { joy, joyCrowdSale, owner, otherAccount,zeroAddress } = await loadFixture(
-        deployOneYearLockFixture
-      );
+      const { joy, joyCrowdSale, owner, otherAccount, zeroAddress } =
+        await loadFixture(deployOneYearLockFixture);
 
       const connectingCrowdsaleContract = await connectToCrowdsale(
         joyCrowdSale,
@@ -93,11 +97,12 @@ describe("Joy", function () {
       const connectingJoyContract = await connectToJoy(joy, owner);
 
       // then
-      await expect(connectingCrowdsaleContract.buyTokens(zeroAddress, {
-        value: 1,
-      })).to.be.revertedWith("Crowdsale: beneficiary is the zero address");
+      await expect(
+        connectingCrowdsaleContract.buyTokens(zeroAddress, {
+          value: 1,
+        })
+      ).to.be.revertedWith("Crowdsale: beneficiary is the zero address");
     });
-
   });
 
   const connectToCrowdsale = async (

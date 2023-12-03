@@ -1,6 +1,9 @@
 import { ethers } from "hardhat";
+import dotenv from "dotenv";
 
 async function main() {
+  dotenv.config();
+
   const currentTimestampInSeconds = Math.round(Date.now() / 1000);
   const unlockTime = currentTimestampInSeconds + 60;
 
@@ -18,21 +21,31 @@ async function main() {
 
   const JoyCrowdsale = await ethers.getContractFactory("Crowdsale");
   const joyCrowdSale = await JoyCrowdsale.deploy(
-      1,
-      owner.address,
-      await joy.getAddress(),
-      1000000000,
-      10000000000000
+    1,
+    owner.address,
+    await joy.getAddress(),
+    1000000000,
+    10000000000000
   );
 
   await joy.transfer(await joyCrowdSale.getAddress(), 10000);
   //await joy.waitForDeployment();
+  const joyTokenAddres = await joy.getAddress();
+  const joyCrowdsaleAddress = await joyCrowdSale.getAddress();
 
-  console.log(
-    `Lock with ${ethers.formatEther(
-      lockedAmount
-    )}ETH and unlock timestamp ${unlockTime} deployed to ${joy.target}`
-  );
+  console.log("Joy deployed to:", joyTokenAddres);
+  console.log("JoyCrowdsale deployed to:", joyCrowdsaleAddress);
+
+  const requestAddress = `https://api.polygonscan.com/api?module=contract&action=getcontractcreation&contractaddresses=${joyTokenAddres},${joyCrowdsaleAddress}&apikey=${process.env.POLYGON_SCAN_API_KEY} `;
+
+  const response = await fetch(requestAddress, {
+    method: "GET",
+    headers: {
+      "Content-Type": "application/json",
+    },
+  });
+
+  console.log("response", response.status);
 }
 
 // We recommend this pattern to be able to use async/await everywhere
