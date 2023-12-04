@@ -1,2 +1,3 @@
 npx hardhat run scripts/deploy.ts --network polygon_mumbai
 npx hardhat verify --network polygon_mumbai <contract-address>
+npx hardhat verify --network <NomDuRéseau> <AdresseDuContratDeployé> <Param1> <Param2> <Param3>
