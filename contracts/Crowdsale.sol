@@ -56,24 +56,6 @@ contract Crowdsale is Ownable {
         buyTokens(msg.sender);
     }
 
-    // function buyTokens(address beneficiary) public payable onlyWhileOpen {
-    //     require(
-    //         beneficiary != address(0),
-    //         "Crowdsale: beneficiary is the zero address"
-    //     );
-
-    //     uint256 weiAmount = msg.value;
-    //     uint256 tokens = weiAmount * rate;
-
-    //     require(raisedAmount + weiAmount <= cap, "Crowdsale: cap exceeded");
-
-    //     raisedAmount = raisedAmount + weiAmount;
-
-    //     token.transfer(beneficiary, tokens);
-
-    //     emit TokensPurchased(msg.sender, beneficiary, weiAmount, tokens);
-    // }
-
     function buyTokens(address beneficiary) public payable {
         require(
             beneficiary != address(0),
