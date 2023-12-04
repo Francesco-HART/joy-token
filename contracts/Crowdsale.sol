@@ -8,6 +8,7 @@ contract Crowdsale is Ownable {
     uint256 public rate; // Number of tokens per Ether
     uint256 public cap; // Maximum amount to be raised
     uint256 public raisedAmount; // Amount of Ether raised
+    uint256 public purchasedTokens; // Amount of Ether raised
     uint256 public closingTime;
     bool public isClosed = false;
 
@@ -63,8 +64,10 @@ contract Crowdsale is Ownable {
         );
         uint256 weiAmount = msg.value;
         uint256 tokensAmount = weiAmount * rate;
-        require(raisedAmount + weiAmount <= cap, "Crowdsale: cap exceeded");
+        //require(raisedAmount + weiAmount <= cap, "Crowdsale: cap exceeded");
+        require(purchasedTokens + tokensAmount <= cap, "Crowdsale: cap exceeded");
         raisedAmount = raisedAmount + weiAmount;
+        purchasedTokens = purchasedTokens + tokensAmount;
         token.transfer(beneficiary, tokensAmount);
         emit TokensPurchased(msg.sender, beneficiary, weiAmount, tokensAmount);
     }
