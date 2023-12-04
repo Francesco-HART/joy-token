@@ -86,4 +86,8 @@ contract Crowdsale is Ownable {
         require(isClosed, "Crowdsale: not closed");
         payable(owner()).transfer(address(this).balance);
     }
+
+    function getRaisedAmount() public view returns (uint){
+        return raisedAmount;
+    }
 }
